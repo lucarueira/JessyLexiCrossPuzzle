@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JESSY LEXI CROSS PUZZLE</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/crossword.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+
+<body>
+
+  <!-- Background Image & Overlay -->
+  <div class="app-background"></div>
+  <div class="app-background-overlay"></div>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <a href="#" class="brand-logo" id="logo-btn">
+      <img src="img/logo.png" alt="Logo Jessy Lexi Cross Puzzle" class="brand-logo-img" id="official-logo-img">
+      <div class="logo-text">
+        <span class="logo-title">Jessy Lexi</span>
+        <span class="logo-subtitle">Cross Puzzle</span>
+      </div>
+    </a>
+
+    <div class="header-actions">
+      <button class="btn-icon" id="btn-records" title="Seus Recordes">🏆</button>
+      <button class="btn-icon" id="btn-settings" title="Configurações">⚙️</button>
+      <button class="btn-icon" id="btn-theme" title="Alternar Tema">🌙</button>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-wrapper">
+
+    <!-- HUB / MAIN HOME VIEW -->
+    <section id="view-hub" class="hub-container">
+      <div class="hero-banner">
+        <img src="img/logo.png" alt="Jessy Lexi Cross Puzzle" class="hero-logo-img">
+        <h1 class="hero-title">JESSY LEXI</h1>
+        <p class="hero-subtitle">Desafie sua mente no portal moderno e inteligente de jogos de palavras.</p>
+      </div>
+
+      <div class="hub-main-content">
+        <div class="games-grid">
+          <!-- Game Card: Palavras Cruzadas -->
+          <div class="game-card active-game">
+            <span class="card-badge-status badge-playable">Disponível</span>
+            <div class="card-icon">🧩</div>
+            <h2 class="card-title">Palavras Cruzadas</h2>
+            <p class="card-desc">Geração automática e dinâmica de palavras cruzadas desafiadoras com pistas
+              inteligentes.</p>
+            <button class="btn-primary" id="btn-play-crossword">
+              <span>Jogar Agora</span>
+              <span>➔</span>
+            </button>
+          </div>
+
+          <!-- Game Card: Caça-Palavras (Futuro) -->
+          <div class="game-card">
+            <span class="card-badge-status badge-comingsoon">Em Breve</span>
+            <div class="card-icon">🔎</div>
+            <h2 class="card-title">Caça-Palavras</h2>
+            <p class="card-desc">Encontre palavras escondidas nas direções horizontal, vertical e diagonal.</p>
+            <button class="btn-secondary" disabled style="opacity: 0.6; cursor: not-allowed;">
+              <span>Em Breve</span>
+            </button>
+          </div>
+
+          <!-- Game Card: Sudoku (Futuro) -->
+          <div class="game-card">
+            <span class="card-badge-status badge-comingsoon">Em Breve</span>
+            <div class="card-icon">🔢</div>
+            <h2 class="card-title">Sudoku</h2>
+            <p class="card-desc">O clássico quebra-cabeça de raciocínio numérico e lógica de grades 9x9.</p>
+            <button class="btn-secondary" disabled style="opacity: 0.6; cursor: not-allowed;">
+              <span>Em Breve</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Jessy Hub Welcome Card -->
+        <aside class="jessy-card jessy-hub-card">
+          <div class="jessy-card-header">
+            <span class="jessy-status-badge">✦ ASSISTENTE VIRTUAL</span>
+          </div>
+          <div class="jessy-avatar-container">
+            <img src="img/feliz.jpg" alt="Jessy" class="jessy-avatar-img" id="jessy-hub-img">
+          </div>
+          <div class="jessy-speech-box">
+            <p class="jessy-speech-text" id="jessy-hub-text">"Olá! Pronto para resolver algumas palavras?"</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- GAME VIEW: CROSSWORD -->
+    <section id="view-game" class="game-view-container" style="display: none;">
+
+      <!-- Top Stats Bar -->
+      <div class="game-top-bar">
+        <div class="game-top-left">
+          <button class="btn-secondary" id="btn-game-back">← Voltar</button>
+          <button class="btn-icon" id="btn-game-pause" title="Pausar">⏸️</button>
+        </div>
+
+        <div class="game-stats-group">
+          <div class="stat-pill stat-pill-score" id="stat-score" title="Pontuação">
+            <span>⭐</span> <span id="val-score">0</span>
+          </div>
+          <div class="stat-pill stat-pill-timer" id="stat-timer" title="Tempo">
+            <span>⏱️</span> <span id="val-timer">00:00</span>
+          </div>
+          <button class="btn-accent stat-pill-hints" id="btn-hint" title="Revelar 1 Letra (-50 pts)">
+            <span>💡</span> <span id="val-hints">4 DICAS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Clue Banner -->
+      <div class="active-clue-banner" id="active-clue-banner">
+        <div class="clue-banner-badge" id="clue-badge">1. HORIZONTAL</div>
+        <div class="clue-banner-text" id="clue-text">Selecione uma célula para começar...</div>
+      </div>
+
+      <!-- Crossword Play Layout -->
+      <div class="crossword-play-layout">
+        <!-- Across Clues List -->
+        <aside class="clues-column">
+          <h3 class="clues-title">➡️ Horizontais</h3>
+          <div class="clues-scroll-list" id="list-across-clues">
+            <!-- Across clue items rendered via JS -->
+          </div>
+        </aside>
+
+        <!-- Center Crossword Matrix Grid -->
+        <div class="grid-viewport" id="grid-viewport">
+          <div class="crossword-matrix" id="crossword-grid">
+            <!-- Grid cells rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Down Clues List -->
+        <aside class="clues-column">
+          <h3 class="clues-title">⬇️ Verticais</h3>
+          <div class="clues-scroll-list" id="list-down-clues">
+            <!-- Down clue items rendered via JS -->
+          </div>
+        </aside>
+
+        <!-- Jessy Interactive Assistant Card -->
+        <aside class="jessy-card jessy-game-card">
+          <div class="jessy-card-header">
+            <span class="jessy-status-badge">✦ ASSISTENTE JESSY</span>
+          </div>
+          <div class="jessy-avatar-container">
+            <img src="img/escrevendo.jpg" alt="Jessy" class="jessy-avatar-img" id="jessy-game-img">
+          </div>
+          <div class="jessy-speech-box">
+            <p class="jessy-speech-text" id="jessy-game-text">"Hmm... vamos descobrir essa palavra!"</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Mobile Onscreen Virtual Keyboard -->
+  <div class="virtual-keyboard" id="virtual-keyboard">
+    <div class="keyboard-row">
+      <button class="key-btn" data-key="Q">Q</button>
+      <button class="key-btn" data-key="W">W</button>
+      <button class="key-btn" data-key="E">E</button>
+      <button class="key-btn" data-key="R">R</button>
+      <button class="key-btn" data-key="T">T</button>
+      <button class="key-btn" data-key="Y">Y</button>
+      <button class="key-btn" data-key="U">U</button>
+      <button class="key-btn" data-key="I">I</button>
+      <button class="key-btn" data-key="O">O</button>
+      <button class="key-btn" data-key="P">P</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key-btn" data-key="A">A</button>
+      <button class="key-btn" data-key="S">S</button>
+      <button class="key-btn" data-key="D">D</button>
+      <button class="key-btn" data-key="F">F</button>
+      <button class="key-btn" data-key="G">G</button>
+      <button class="key-btn" data-key="H">H</button>
+      <button class="key-btn" data-key="J">J</button>
+      <button class="key-btn" data-key="K">K</button>
+      <button class="key-btn" data-key="L">L</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key-btn" data-key="Z">Z</button>
+      <button class="key-btn" data-key="X">X</button>
+      <button class="key-btn" data-key="C">C</button>
+      <button class="key-btn" data-key="V">V</button>
+      <button class="key-btn" data-key="B">B</button>
+      <button class="key-btn" data-key="N">N</button>
+      <button class="key-btn" data-key="M">M</button>
+      <button class="key-btn key-btn-wide" data-key="BACKSPACE">⌫ Apagar</button>
+    </div>
+  </div>
+
+  <!-- MODAL: SETUP NEW GAME -->
+  <div class="modal-overlay" id="modal-setup">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">🧩 Palavras Cruzadas</h2>
+        <button class="btn-close-modal" id="btn-close-setup">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🌐 Idioma do Jogo</label>
+        <div class="select-options-grid" id="opt-language">
+          <div class="option-chip selected" data-value="pt">Português 🇧🇷</div>
+          <div class="option-chip" data-value="en">English 🇺🇸</div>
+          <div class="option-chip" data-value="random">Aleatório 🌎</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">⚡ Dificuldade</label>
+        <div class="select-options-grid" id="opt-difficulty">
+          <div class="option-chip" data-value="easy">Fácil</div>
+          <div class="option-chip" data-value="medium">Médio</div>
+          <div class="option-chip" data-value="hard">Difícil</div>
+          <div class="option-chip selected" data-value="random">Aleatório</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button class="btn-secondary" id="btn-cancel-setup">Cancelar</button>
+        <button class="btn-primary" id="btn-start-new-game">Iniciar Partida</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RESUME ACTIVE GAME -->
+  <div class="modal-overlay" id="modal-resume">
+    <div class="modal-card" style="text-align: center;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem;">💾</div>
+      <h2 class="modal-title" style="justify-content: center; margin-bottom: 0.75rem;">Partida em Andamento</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 1.75rem;">Encontramos uma partida não concluída salva no
+        seu navegador.</p>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button class="btn-primary" id="btn-resume-game" style="justify-content: center;">Continuar Partida</button>
+        <button class="btn-secondary" id="btn-discard-resume" style="justify-content: center;">Nova Partida</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VICTORY CELEBRATION -->
+  <div class="modal-overlay" id="modal-victory">
+    <div class="modal-card modal-victory-card" style="text-align: center;">
+      <div class="jessy-victory-avatar">
+        <img src="img/comemorando.jpg" alt="Jessy Comemorando" class="jessy-avatar-img" id="jessy-vic-img">
+      </div>
+      <h2 class="modal-title" style="justify-content: center; color: var(--accent-success); margin-bottom: 0.25rem;">
+        PARABÉNS!</h2>
+      <p style="color: var(--text-secondary); font-weight: 700; margin-bottom: 1.5rem;" id="jessy-vic-text">"PARABÉNS!
+        Você conseguiu!"</p>
+
+      <div
+        style="background: var(--bg-tertiary); border-radius: var(--radius-md); padding: 1.25rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.75rem; text-align: left;">
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">🏆 PONTUAÇÃO</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-gold);" id="vic-score">0</div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">⏱️ TEMPO FINAL</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-cyan);" id="vic-time">00:00</div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">🧩 PALAVRAS</div>
+          <div style="font-size: 1.25rem; font-weight: 800;" id="vic-words">0/0</div>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">💡 DICAS USADAS</div>
+          <div style="font-size: 1.25rem; font-weight: 800;" id="vic-hints">0/4</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <button class="btn-primary" id="btn-vic-again" style="justify-content: center;">Jogar Novamente</button>
+        <button class="btn-secondary" id="btn-vic-hub" style="justify-content: center;">Voltar ao Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SEUS RECORDES -->
+  <div class="modal-overlay" id="modal-records">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">🏆 Seus Recordes</h2>
+        <button class="btn-close-modal" id="btn-close-records">&times;</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+        <div
+          style="background: var(--bg-tertiary); padding: 1rem; border-radius: var(--radius-md); text-align: center;">
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">MAIOR PONTUAÇÃO</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-gold);" id="rec-high-score">0</div>
+        </div>
+        <div
+          style="background: var(--bg-tertiary); padding: 1rem; border-radius: var(--radius-md); text-align: center;">
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">MELHOR TEMPO</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-cyan);" id="rec-best-time">--:--</div>
+        </div>
+      </div>
+
+      <div
+        style="display: flex; flex-direction: column; gap: 0.75rem; background: var(--bg-tertiary); padding: 1rem; border-radius: var(--radius-md);">
+        <div style="display: flex; justify-content: space-between; font-weight: 600;">
+          <span>Partidas Concluídas:</span>
+          <span id="rec-games-completed">0</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-weight: 600;">
+          <span>Palavras Resolvidas:</span>
+          <span id="rec-words-solved">0</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-weight: 600;">
+          <span>Dicas Utilizadas:</span>
+          <span id="rec-hints-used">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIGURAÇÕES -->
+  <div class="modal-overlay" id="modal-settings">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">⚙️ Configurações</h2>
+        <button class="btn-close-modal" id="btn-close-settings">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tema da Interface</label>
+        <div class="select-options-grid" id="opt-theme-setting">
+          <div class="option-chip" data-value="dark">🌙 Escuro</div>
+          <div class="option-chip" data-value="light">☀️ Claro</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+        <button class="btn-secondary" id="btn-clear-data"
+          style="color: var(--accent-error); border-color: rgba(239, 68, 68, 0.3); width: 100%; justify-content: center;">🗑️
+          Limpar Progresso e Histórico</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App Entry Point Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
