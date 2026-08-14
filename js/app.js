@@ -367,18 +367,27 @@ class App {
 
     let cellSize = 54;
     if (viewport) {
+      const rect = viewport.getBoundingClientRect();
       const isMobile = window.innerWidth <= 768;
       const virtKeyb = document.getElementById('virtual-keyboard');
       const isKeyboardVisible = isMobile && virtKeyb && virtKeyb.classList.contains('active');
-      const keybOffset = isKeyboardVisible ? 150 : 0;
+      
+      let maxAvailH = rect.height;
+      if (isKeyboardVisible && virtKeyb) {
+        const keybRect = virtKeyb.getBoundingClientRect();
+        const spaceAboveKeyb = keybRect.top - rect.top;
+        if (spaceAboveKeyb > 40) {
+          maxAvailH = spaceAboveKeyb;
+        }
+      }
 
-      const availHeight = viewport.clientHeight - keybOffset - (isMobile ? 10 : 20);
-      const availWidth = viewport.clientWidth - (isMobile ? 10 : 20);
+      const availHeight = maxAvailH - (isMobile ? 8 : 16);
+      const availWidth = rect.width - (isMobile ? 8 : 16);
 
       if (availHeight > 0 && availWidth > 0) {
-        const maxH = Math.floor((availHeight - (puzzle.rows * 3)) / puzzle.rows);
-        const maxW = Math.floor((availWidth - (puzzle.cols * 3)) / puzzle.cols);
-        cellSize = Math.max(26, Math.min(80, maxH, maxW));
+        const maxH = Math.floor((availHeight - (puzzle.rows * 2)) / puzzle.rows);
+        const maxW = Math.floor((availWidth - (puzzle.cols * 2)) / puzzle.cols);
+        cellSize = Math.max(20, Math.min(80, maxH, maxW));
       }
     }
 
