@@ -1,6 +1,6 @@
 /**
  * JESSY LEXI CROSS PUZZLE - MAIN APP CONTROLLER
- * Handles UI routes, Cruzada Direta grid rendering, Input Mode (Keyboard vs Challenge Rack), and game flow.
+ * Handles UI routes, Cruzada Direta grid rendering, Mobile Native Input integration, and game flow.
  */
 
 import { CrosswordGenerator } from './crossword/CrosswordGenerator.js';
@@ -79,6 +79,14 @@ class App {
     document.documentElement.setAttribute('data-theme', next);
     LocalStorageManager.saveSettings({ theme: next });
     this.updateThemeButtonIcon(next);
+  }
+
+  focusMobileInput() {
+    const mobileInput = document.getElementById('mobile-hidden-input');
+    if (mobileInput) {
+      mobileInput.value = '';
+      mobileInput.focus();
+    }
   }
 
   bindEvents() {
@@ -178,7 +186,32 @@ class App {
       }
     });
 
-    // Virtual Keyboard Buttons Handler
+    // Mobile Hidden Native Keyboard Input Bridge
+    const mobileInput = document.getElementById('mobile-hidden-input');
+    if (mobileInput) {
+      mobileInput.addEventListener('input', (e) => {
+        if (!this.currentGame) return;
+        const val = e.target.value;
+        if (val && val.length > 0) {
+          const char = val[val.length - 1];
+          if (/^[a-zA-ZáàâãéèêíïóôõöúçÑñ]$/.test(char)) {
+            this.currentGame.inputLetter(char);
+          }
+          e.target.value = '';
+        }
+      });
+
+      mobileInput.addEventListener('keydown', (e) => {
+        if (!this.currentGame) return;
+        if (e.key === 'Backspace' || e.inputType === 'deleteContentBackward') {
+          e.preventDefault();
+          this.currentGame.handleBackspace();
+          mobileInput.value = '';
+        }
+      });
+    }
+
+    // Onscreen Virtual Keyboard Buttons Handler (Desktop/Tablet fallback)
     document.querySelectorAll('.key-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const key = e.currentTarget.getAttribute('data-key');
@@ -339,7 +372,7 @@ class App {
     // Render Cruzada Direta Matrix Grid
     this.renderGridMatrix(puzzle, userGrid, revealedGrid, completedWords, selectedCell, activeWord);
 
-    // Toggle Input Mode UI (Keyboard vs Challenge Tile Rack)
+    // Toggle Input Mode UI (Native Phone Keyboard / Desafio Banco de Letras)
     const tileRackSec = document.getElementById('tile-rack-section');
     const virtKeyb = document.getElementById('virtual-keyboard');
     const gameContainer = document.getElementById('view-game');
@@ -351,13 +384,8 @@ class App {
       this.renderTileRack(tileRack);
     } else {
       if (tileRackSec) tileRackSec.style.display = 'none';
-      if (window.innerWidth <= 768) {
-        if (virtKeyb) virtKeyb.classList.add('active');
-        if (gameContainer) gameContainer.classList.add('keyboard-mode-active');
-      } else {
-        if (virtKeyb) virtKeyb.classList.remove('active');
-        if (gameContainer) gameContainer.classList.remove('keyboard-mode-active');
-      }
+      if (virtKeyb) virtKeyb.classList.remove('active');
+      if (gameContainer) gameContainer.classList.remove('keyboard-mode-active');
     }
   }
 
@@ -369,25 +397,14 @@ class App {
     if (viewport) {
       const rect = viewport.getBoundingClientRect();
       const isMobile = window.innerWidth <= 768;
-      const virtKeyb = document.getElementById('virtual-keyboard');
-      const isKeyboardVisible = isMobile && virtKeyb && virtKeyb.classList.contains('active');
       
-      let maxAvailH = rect.height;
-      if (isKeyboardVisible && virtKeyb) {
-        const keybRect = virtKeyb.getBoundingClientRect();
-        const spaceAboveKeyb = keybRect.top - rect.top;
-        if (spaceAboveKeyb > 40) {
-          maxAvailH = spaceAboveKeyb;
-        }
-      }
-
-      const availHeight = maxAvailH - (isMobile ? 8 : 16);
+      const availHeight = rect.height - (isMobile ? 8 : 16);
       const availWidth = rect.width - (isMobile ? 8 : 16);
 
       if (availHeight > 0 && availWidth > 0) {
         const maxH = Math.floor((availHeight - (puzzle.rows * 2)) / puzzle.rows);
         const maxW = Math.floor((availWidth - (puzzle.cols * 2)) / puzzle.cols);
-        cellSize = Math.max(20, Math.min(80, maxH, maxW));
+        cellSize = Math.max(22, Math.min(80, maxH, maxW));
       }
     }
 
@@ -436,6 +453,7 @@ class App {
           cellEl.addEventListener('click', () => {
             if (this.currentGame) {
               this.currentGame.selectCell(r, c);
+              this.focusMobileInput();
             }
           });
         } else {
@@ -477,6 +495,7 @@ class App {
           cellEl.addEventListener('click', () => {
             if (this.currentGame) {
               this.currentGame.selectCell(r, c);
+              this.focusMobileInput();
             }
           });
         }

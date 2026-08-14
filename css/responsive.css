@@ -1,9 +1,21 @@
 /* ==========================================================================
    JESSY LEXI CROSS PUZZLE - RESPONSIVE STYLES (MOBILE / IPHONE / TABLET)
-   Layout limpo, responsivo, sem rolagem e adaptado para iOS Safari e Android.
+   Otimização completa para Celular: Tela Inicial compacta e botões fáceis de clicar.
+   Teclado Nativo do Celular integrado perfeitamente sem ocupar espaço da grade.
    ========================================================================== */
 
-/* Teclado Virtual Onscreen para Dispositivos Móveis */
+/* Input oculto para ponte do Teclado Nativo do Smartphone */
+.visually-hidden-input {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Teclado Virtual Onscreen para Desktop/Tablet Fallback */
 .virtual-keyboard {
   display: none;
   flex-direction: column;
@@ -72,9 +84,9 @@
   }
 
   .jessy-avatar-container {
-    height: 200px;
-    min-height: 200px;
-    max-height: 200px;
+    height: 180px;
+    min-height: 180px;
+    max-height: 180px;
   }
 }
 
@@ -94,7 +106,8 @@
 @media (max-width: 768px) {
   html, body {
     height: 100dvh;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .app-header {
@@ -114,15 +127,104 @@
     display: none;
   }
 
+  /* TELA INICIAL (MENU PRINCIPAL / HUB) RESPONSIVA NO MOBILE */
+  .main-wrapper {
+    height: auto;
+    min-height: calc(100dvh - 48px);
+    overflow: visible;
+  }
+
+  .hub-container {
+    padding: 0.65rem 0.75rem 2rem 0.75rem;
+    height: auto;
+  }
+
+  .hero-banner {
+    padding: 0.4rem;
+    margin-bottom: 0.65rem;
+    text-align: center;
+  }
+
+  .hero-logo-img {
+    height: 56px;
+    margin-bottom: 0.2rem;
+  }
+
+  .hero-title {
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+  }
+
+  .hero-subtitle {
+    font-size: 0.82rem;
+    line-height: 1.3;
+  }
+
+  .hub-main-content {
+    flex-direction: column;
+    gap: 0.85rem;
+    width: 100%;
+  }
+
+  .games-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .game-card {
+    padding: 1rem 1.15rem;
+    gap: 0.55rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .game-card .card-icon {
+    font-size: 2.2rem;
+  }
+
+  .game-card .card-title {
+    font-size: 1.2rem;
+  }
+
+  .game-card .card-desc {
+    font-size: 0.88rem;
+    line-height: 1.35;
+  }
+
+  .btn-primary, .btn-secondary {
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 800;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .jessy-hub-card {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0.35rem;
+  }
+
+  .jessy-avatar-container {
+    height: 140px;
+    min-height: 140px;
+    max-height: 140px;
+  }
+
+  /* TELA DE JOGO RESPONSIVA NO MOBILE */
   .game-view-container {
     height: calc(100dvh - 48px);
-    padding: 0.35rem;
+    padding: 0.35rem 0.4rem;
     overflow: hidden;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .game-top-bar {
-    padding: 0.35rem 0.5rem;
+    padding: 0.3rem 0.5rem;
     margin-bottom: 0.3rem;
     gap: 0.35rem;
   }
