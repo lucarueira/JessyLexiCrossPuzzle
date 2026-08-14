@@ -1,6 +1,6 @@
 /**
  * CrosswordGame manages the active game state, timer, keyboard navigation,
- * hint system, word verification, auto-saving, and victory triggers.
+ * tile rack (Banco de Letras), hint system, word verification, auto-saving, and victory triggers.
  */
 
 import { ScoreManager } from '../score/ScoreManager.js';
@@ -29,6 +29,8 @@ export class CrosswordGame {
       this.isCompleted = restoredState.isCompleted || false;
       this.selectedCell = restoredState.selectedCell || { row: 0, col: 0 };
       this.currentDirection = restoredState.currentDirection || 'across';
+      this.tileRack = restoredState.tileRack || [];
+      this.inputMode = restoredState.inputMode || 'keyboard';
     } else {
       // Initialize fresh state
       this.userGrid = Array.from({ length: this.rows }, () => Array(this.cols).fill(''));
@@ -41,11 +43,14 @@ export class CrosswordGame {
       this.isCompleted = false;
       this.selectedCell = null;
       this.currentDirection = 'across';
+      this.tileRack = [];
+      this.inputMode = 'keyboard';
 
-      // Find first non-black cell to focus initially
+      // Find first solution cell to focus initially
       for (let r = 0; r < this.rows; r++) {
         for (let c = 0; c < this.cols; c++) {
-          if (!puzzle.cells[r][c].isBlack) {
+          const cell = puzzle.cells[r][c];
+          if (!cell.isBlack && !cell.isClueCell) {
             this.selectedCell = { row: r, col: c };
             break;
           }
@@ -59,32 +64,22 @@ export class CrosswordGame {
     this.onCompleteCallbacks = [];
     this.onHintUsedCallbacks = [];
     this.onWordSolvedCallbacks = [];
+
+    this.updateTileRack();
   }
 
-  /**
-   * Register listener for UI updates
-   */
   subscribe(callback) {
     this.onStateChangeCallbacks.push(callback);
   }
 
-  /**
-   * Register listener for game victory event
-   */
   onComplete(callback) {
     this.onCompleteCallbacks.push(callback);
   }
 
-  /**
-   * Register listener for hint used event
-   */
   onHintUsed(callback) {
     this.onHintUsedCallbacks.push(callback);
   }
 
-  /**
-   * Register listener for word solved event
-   */
   onWordSolved(callback) {
     this.onWordSolvedCallbacks.push(callback);
   }
@@ -94,9 +89,6 @@ export class CrosswordGame {
     this.onStateChangeCallbacks.forEach(cb => cb(this.getStateSummary()));
   }
 
-  /**
-   * Starts game timer loop (starts on first interaction per requirements)
-   */
   startTimer() {
     if (this.timerInterval || this.isCompleted) return;
     this.isStarted = true;
@@ -108,9 +100,6 @@ export class CrosswordGame {
     }, 1000);
   }
 
-  /**
-   * Pauses timer
-   */
   pauseTimer() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
@@ -119,25 +108,38 @@ export class CrosswordGame {
   }
 
   /**
-   * Selects a cell and manages direction toggling
-   * @param {number} row 
-   * @param {number} col 
+   * Selects a cell or clue cell in grid
    */
   selectCell(row, col) {
     if (row < 0 || row >= this.rows || col < 0 || col >= this.cols) return;
-    if (this.puzzle.cells[row][col].isBlack) return;
+    const cellData = this.puzzle.cells[row][col];
+    if (cellData.isBlack) return;
 
     if (!this.isStarted) {
       this.startTimer();
     }
 
+    // Handle clicking a Clue Cell
+    if (cellData.isClueCell && cellData.clues && cellData.clues.length > 0) {
+      let clueToFocus = cellData.clues[0];
+      if (cellData.clues.length > 1 && this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col) {
+        // Toggle to second clue in dual clue cell
+        clueToFocus = cellData.clues[1];
+      }
+      this.currentDirection = clueToFocus.direction;
+      this.selectedCell = { row: clueToFocus.startRow, col: clueToFocus.startCol };
+      this.updateTileRack();
+      this.notifyStateChange();
+      return;
+    }
+
+    // Handle clicking solution cell
+    const prevWordId = this.getActiveWord() ? this.getActiveWord().id : null;
+
     if (this.selectedCell && this.selectedCell.row === row && this.selectedCell.col === col) {
-      // Toggle direction if clicking already focused cell
       this.currentDirection = this.currentDirection === 'across' ? 'down' : 'across';
     } else {
       this.selectedCell = { row, col };
-      // If cell belongs to only one word direction, auto-switch to that direction
-      const cellData = this.puzzle.cells[row][col];
       if (cellData.acrossWordId && !cellData.downWordId) {
         this.currentDirection = 'across';
       } else if (cellData.downWordId && !cellData.acrossWordId) {
@@ -145,18 +147,128 @@ export class CrosswordGame {
       }
     }
 
+    const newWord = this.getActiveWord();
+    if (!newWord || newWord.id !== prevWordId) {
+      this.updateTileRack();
+    }
+
     this.notifyStateChange();
   }
 
   /**
-   * Handles user entering a letter
-   * @param {string} char 
+   * Generates or refreshes the tile rack (Banco de Letras)
    */
+  updateTileRack() {
+    const activeWord = this.getActiveWord();
+    let neededLetters = [];
+
+    if (activeWord) {
+      const wordLen = activeWord.length;
+      for (let i = 0; i < wordLen; i++) {
+        const r = activeWord.direction === 'across' ? activeWord.startRow : activeWord.startRow + i;
+        const c = activeWord.direction === 'across' ? activeWord.startCol + i : activeWord.startCol;
+        if (!this.userGrid[r][c] && !this.revealedGrid[r][c]) {
+          neededLetters.push(this.puzzle.cells[r][c].solutionLetter);
+        }
+      }
+    }
+
+    if (neededLetters.length === 0) {
+      for (let r = 0; r < this.rows; r++) {
+        for (let c = 0; c < this.cols; c++) {
+          const cell = this.puzzle.cells[r][c];
+          if (!cell.isBlack && !cell.isClueCell) {
+            if (!this.userGrid[r][c] && !this.revealedGrid[r][c]) {
+              neededLetters.push(cell.solutionLetter);
+            }
+          }
+        }
+      }
+    }
+
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const targetSize = Math.max(8, neededLetters.length + 2);
+
+    while (neededLetters.length < targetSize) {
+      const randChar = alphabet[Math.floor(Math.random() * alphabet.length)];
+      neededLetters.push(randChar);
+    }
+
+    neededLetters = neededLetters.slice(0, 9);
+    neededLetters.sort(() => Math.random() - 0.5);
+
+    this.tileRack = neededLetters.map((char, index) => ({
+      id: `tile_${index}_${char}_${Date.now()}`,
+      letter: char,
+      isUsed: false
+    }));
+  }
+
+  /**
+   * Selects a letter tile from Banco de Letras
+   */
+  selectRackTile(tileIndex) {
+    if (this.isCompleted || !this.selectedCell) return;
+    const tile = this.tileRack[tileIndex];
+    if (!tile || tile.isUsed) return;
+
+    const { row, col } = this.selectedCell;
+    const cellData = this.puzzle.cells[row][col];
+    if (cellData.isBlack || cellData.isClueCell) return;
+
+    if (!this.isStarted) {
+      this.startTimer();
+    }
+
+    this.userGrid[row][col] = tile.letter;
+    tile.isUsed = true;
+
+    this.checkWordsAtCell(row, col);
+    this.moveFocus(1);
+    this.notifyStateChange();
+  }
+
+  /**
+   * Recalls placed draft letters back to Banco de Letras
+   */
+  recallPlacedTiles() {
+    if (this.isCompleted) return;
+    const activeWord = this.getActiveWord();
+    if (!activeWord) return;
+
+    const wordLen = activeWord.length;
+    for (let i = 0; i < wordLen; i++) {
+      const r = activeWord.direction === 'across' ? activeWord.startRow : activeWord.startRow + i;
+      const c = activeWord.direction === 'across' ? activeWord.startCol + i : activeWord.startCol;
+
+      if (!this.revealedGrid[r][c] && this.userGrid[r][c] !== '') {
+        const char = this.userGrid[r][c];
+        this.userGrid[r][c] = '';
+
+        const usedTile = this.tileRack.find(t => t.isUsed && t.letter === char);
+        if (usedTile) {
+          usedTile.isUsed = false;
+        }
+      }
+    }
+
+    this.notifyStateChange();
+  }
+
+  /**
+   * Shuffles the Banco de Letras tiles
+   */
+  shuffleRack() {
+    if (!this.tileRack || this.tileRack.length === 0) return;
+    this.tileRack.sort(() => Math.random() - 0.5);
+    this.notifyStateChange();
+  }
+
   inputLetter(char) {
     if (!this.selectedCell || this.isCompleted) return;
     const { row, col } = this.selectedCell;
     const cellData = this.puzzle.cells[row][col];
-    if (cellData.isBlack) return;
+    if (cellData.isBlack || cellData.isClueCell) return;
 
     if (!this.isStarted) {
       this.startTimer();
@@ -165,40 +277,41 @@ export class CrosswordGame {
     const upperChar = char.toUpperCase();
     this.userGrid[row][col] = upperChar;
 
-    // Verify words passing through this cell
+    // Mark matching tile as used in rack if available
+    const rackTile = this.tileRack.find(t => !t.isUsed && t.letter === upperChar);
+    if (rackTile) {
+      rackTile.isUsed = true;
+    }
+
     this.checkWordsAtCell(row, col);
-
-    // Auto-advance focus to next cell in current direction
     this.moveFocus(1);
-
     this.notifyStateChange();
   }
 
-  /**
-   * Handles backspace action
-   */
   handleBackspace() {
     if (!this.selectedCell || this.isCompleted) return;
     const { row, col } = this.selectedCell;
 
     if (this.userGrid[row][col] !== '') {
-      // Clear current cell letter if present
+      const char = this.userGrid[row][col];
       this.userGrid[row][col] = '';
+      const usedTile = this.tileRack.find(t => t.isUsed && t.letter === char);
+      if (usedTile) usedTile.isUsed = false;
     } else {
-      // Move backward and clear previous cell
       this.moveFocus(-1);
       if (this.selectedCell) {
-        this.userGrid[this.selectedCell.row][this.selectedCell.col] = '';
+        const prevR = this.selectedCell.row;
+        const prevC = this.selectedCell.col;
+        const char = this.userGrid[prevR][prevC];
+        this.userGrid[prevR][prevC] = '';
+        const usedTile = this.tileRack.find(t => t.isUsed && t.letter === char);
+        if (usedTile) usedTile.isUsed = false;
       }
     }
 
     this.notifyStateChange();
   }
 
-  /**
-   * Moves focus along active word direction or arrow keys
-   * @param {number} delta 1 (forward) or -1 (backward)
-   */
   moveFocus(delta) {
     if (!this.selectedCell) return;
     let { row, col } = this.selectedCell;
@@ -207,20 +320,17 @@ export class CrosswordGame {
     let nextRow = row + (isAcross ? 0 : delta);
     let nextCol = col + (isAcross ? delta : 0);
 
-    // Ensure within grid bounds and not black cell
     if (
       nextRow >= 0 && nextRow < this.rows &&
-      nextCol >= 0 && nextCol < this.cols &&
-      !this.puzzle.cells[nextRow][nextCol].isBlack
+      nextCol >= 0 && nextCol < this.cols
     ) {
-      this.selectedCell = { row: nextRow, col: nextCol };
+      const cell = this.puzzle.cells[nextRow][nextCol];
+      if (!cell.isBlack && !cell.isClueCell) {
+        this.selectedCell = { row: nextRow, col: nextCol };
+      }
     }
   }
 
-  /**
-   * Navigates via arrow keys (Up, Down, Left, Right)
-   * @param {'ArrowUp'|'ArrowDown'|'ArrowLeft'|'ArrowRight'} key 
-   */
   handleArrowNavigation(key) {
     if (!this.selectedCell) return;
     let { row, col } = this.selectedCell;
@@ -232,18 +342,16 @@ export class CrosswordGame {
 
     if (
       row >= 0 && row < this.rows &&
-      col >= 0 && col < this.cols &&
-      !this.puzzle.cells[row][col].isBlack
+      col >= 0 && col < this.cols
     ) {
-      this.selectedCell = { row, col };
-      this.notifyStateChange();
+      const cell = this.puzzle.cells[row][col];
+      if (!cell.isBlack && !cell.isClueCell) {
+        this.selectedCell = { row, col };
+        this.notifyStateChange();
+      }
     }
   }
 
-  /**
-   * Uses a hint (max 4 per game). Reveals one letter in selected word or puzzle.
-   * Deducts 50 points.
-   */
   useHint() {
     if (this.hintsLeft <= 0 || this.isCompleted) {
       showToast('⚠️ Nenhuma dica restante nesta partida!', 'warning');
@@ -254,7 +362,6 @@ export class CrosswordGame {
       this.startTimer();
     }
 
-    // Attempt to reveal an unrevealed letter in current word first
     let targetCell = this.findUnrevealedCellInCurrentWord() || this.findAnyUnrevealedCell();
 
     if (!targetCell) {
@@ -269,17 +376,11 @@ export class CrosswordGame {
     this.revealedGrid[row][col] = true;
     this.hintsLeft--;
 
-    // Deduct 50 points penalty
     const penalty = this.scoreManager.applyHintPenalty();
-
     showToast(`💡 Uma letra foi revelada! -${penalty} pontos`, 'info');
 
-    // Notify listeners that hint was used
     this.onHintUsedCallbacks.forEach(cb => cb(this.hintsLeft));
-
-    // Check if this completes any word or the entire puzzle
     this.checkWordsAtCell(row, col);
-
     this.notifyStateChange();
   }
 
@@ -302,8 +403,9 @@ export class CrosswordGame {
   findAnyUnrevealedCell() {
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
-        if (!this.puzzle.cells[r][c].isBlack) {
-          if (this.userGrid[r][c] !== this.puzzle.cells[r][c].solutionLetter) {
+        const cell = this.puzzle.cells[r][c];
+        if (!cell.isBlack && !cell.isClueCell) {
+          if (this.userGrid[r][c] !== cell.solutionLetter) {
             return { row: r, col: c };
           }
         }
@@ -312,9 +414,6 @@ export class CrosswordGame {
     return null;
   }
 
-  /**
-   * Checks if words passing through cell (r, c) are fully solved
-   */
   checkWordsAtCell(row, col) {
     const cellData = this.puzzle.cells[row][col];
     if (cellData.acrossWordId) {
@@ -331,9 +430,6 @@ export class CrosswordGame {
     }
   }
 
-  /**
-   * Verifies if word object is completely and correctly filled
-   */
   verifyWord(wordObj) {
     const wordLength = wordObj.length || (wordObj.normalizedWord ? wordObj.normalizedWord.length : (wordObj.word ? wordObj.word.length : 0));
     if (!wordLength || wordLength === 0) return;
@@ -363,25 +459,20 @@ export class CrosswordGame {
       const points = this.scoreManager.addWordScore(wordObj.difficulty);
       showToast(`✓ Palavra correta! (+${points} pts)`, 'success');
 
-      // Notify listeners of solved word
       this.onWordSolvedCallbacks.forEach(cb => cb(wordObj));
+      this.updateTileRack();
 
-      // Check if ALL words in puzzle are completed
       if (this.completedWords.size === this.puzzle.words.length) {
         this.completeGame();
       }
     }
   }
 
-  /**
-   * Triggers victory sequence when puzzle is fully solved
-   */
   completeGame() {
     if (this.isCompleted) return;
     this.isCompleted = true;
     this.pauseTimer();
 
-    // Add time bonus
     const bonus = this.scoreManager.calculateCompletionBonus(this.puzzle.totalWords, this.elapsedSeconds);
 
     const gameResult = {
@@ -393,7 +484,6 @@ export class CrosswordGame {
       timeBonus: bonus
     };
 
-    // Log to persistent records & clear active save
     LocalStorageManager.updateRecords(gameResult);
     LocalStorageManager.addRecentWords(this.puzzle.words.map(w => w.id));
     LocalStorageManager.clearActiveGame();
@@ -401,13 +491,11 @@ export class CrosswordGame {
     this.onCompleteCallbacks.forEach(cb => cb(gameResult));
   }
 
-  /**
-   * Returns current active word based on selected cell & direction
-   */
   getActiveWord() {
     if (!this.selectedCell) return null;
     const { row, col } = this.selectedCell;
     const cellData = this.puzzle.cells[row][col];
+    if (!cellData) return null;
 
     if (this.currentDirection === 'across' && cellData.acrossWordId) {
       return this.puzzle.words.find(w => w.id === cellData.acrossWordId && w.direction === 'across');
@@ -415,7 +503,6 @@ export class CrosswordGame {
     if (this.currentDirection === 'down' && cellData.downWordId) {
       return this.puzzle.words.find(w => w.id === cellData.downWordId && w.direction === 'down');
     }
-    // Fallback to whichever word direction exists for this cell
     if (cellData.acrossWordId) {
       return this.puzzle.words.find(w => w.id === cellData.acrossWordId && w.direction === 'across');
     }
@@ -425,9 +512,6 @@ export class CrosswordGame {
     return null;
   }
 
-  /**
-   * Saves active state to local storage
-   */
   saveState() {
     if (this.isCompleted) return;
     LocalStorageManager.saveActiveGame({
@@ -440,13 +524,12 @@ export class CrosswordGame {
       elapsedSeconds: this.elapsedSeconds,
       isStarted: this.isStarted,
       selectedCell: this.selectedCell,
-      currentDirection: this.currentDirection
+      currentDirection: this.currentDirection,
+      tileRack: this.tileRack,
+      inputMode: this.inputMode
     });
   }
 
-  /**
-   * Returns current game summary for UI rendering
-   */
   getStateSummary() {
     return {
       puzzle: this.puzzle,
@@ -460,6 +543,8 @@ export class CrosswordGame {
       selectedCell: this.selectedCell,
       currentDirection: this.currentDirection,
       activeWord: this.getActiveWord(),
+      tileRack: this.tileRack,
+      inputMode: this.inputMode,
       isCompleted: this.isCompleted
     };
   }

@@ -1,11 +1,11 @@
 /**
- * GridNumbering scans the grid top-to-bottom, left-to-right to assign clue numbers
- * and build Across & Down clue lists.
+ * GridNumbering process grid and placed words for Palavra Cruzada Direta.
+ * Maps clue cells directly into the grid matrix preceding each word start.
  */
 
 export class GridNumbering {
   /**
-   * Numbers the crossword grid cells and organizes clues
+   * Numbers grid cells and builds Direct Crossword (Cruzada Direta) cell matrix & clues
    * @param {Array<Array<string|null>>} grid Matrix of solution letters or null
    * @param {Array<Object>} placedWords List of placed word objects
    * @returns {Object} { cellMatrix, acrossClues, downClues, numberedWords }
@@ -14,12 +14,14 @@ export class GridNumbering {
     const rows = grid.length;
     const cols = grid[0].length;
 
-    // Create detailed cell object matrix
+    // Create initial cell object matrix
     const cellMatrix = Array.from({ length: rows }, (_, r) =>
       Array.from({ length: cols }, (_, c) => ({
         row: r,
         col: c,
         isBlack: grid[r][c] === null,
+        isClueCell: false,
+        clues: [],
         solutionLetter: grid[r][c],
         number: null,
         acrossWordId: null,
@@ -27,98 +29,79 @@ export class GridNumbering {
       }))
     );
 
-    // Map starting positions to words
-    const startMap = new Map(); // "r,c" -> { across: wordObj, down: wordObj }
-
-    placedWords.forEach(w => {
-      const key = `${w.startRow},${w.startCol}`;
-      if (!startMap.has(key)) {
-        startMap.set(key, {});
-      }
-      if (w.direction === 'across') {
-        startMap.get(key).across = w;
-      } else {
-        startMap.get(key).down = w;
-      }
-    });
-
     let currentNumber = 1;
     const acrossClues = [];
     const downClues = [];
     const numberedWords = [];
 
-    // Scan top-to-bottom, left-to-right
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (cellMatrix[r][c].isBlack) continue;
+    // Assign word IDs and place clue cells
+    placedWords.forEach(w => {
+      const number = currentNumber++;
+      const wordLength = w.normalizedWord ? w.normalizedWord.length : (w.word ? w.word.length : 0);
+      
+      const wordObj = {
+        ...w,
+        number,
+        length: wordLength
+      };
 
-        const key = `${r},${c}`;
-        const starting = startMap.get(key);
+      numberedWords.push(wordObj);
 
-        if (starting && (starting.across || starting.down)) {
-          const number = currentNumber++;
-          cellMatrix[r][c].number = number;
-
-          if (starting.across) {
-            const wordLength = starting.across.normalizedWord ? starting.across.normalizedWord.length : (starting.across.word ? starting.across.word.length : 0);
-            const wordObj = {
-              ...starting.across,
-              number,
-              length: wordLength
-            };
-            acrossClues.push({
-              id: wordObj.id,
-              number: number,
-              word: wordObj.normalizedWord,
-              clue: wordObj.clue,
-              description: wordObj.description || '',
-              category: wordObj.category || 'geral',
-              difficulty: wordObj.difficulty || 'medium',
-              direction: 'across',
-              startRow: r,
-              startCol: c,
-              length: wordLength
-            });
-            numberedWords.push(wordObj);
-
-            // Tag cells belonging to this across word
-            for (let i = 0; i < wordLength; i++) {
-              cellMatrix[r][c + i].acrossWordId = wordObj.id;
-            }
-          }
-
-          if (starting.down) {
-            const wordLength = starting.down.normalizedWord ? starting.down.normalizedWord.length : (starting.down.word ? starting.down.word.length : 0);
-            const wordObj = {
-              ...starting.down,
-              number,
-              length: wordLength
-            };
-            downClues.push({
-              id: wordObj.id,
-              number: number,
-              word: wordObj.normalizedWord,
-              clue: wordObj.clue,
-              description: wordObj.description || '',
-              category: wordObj.category || 'geral',
-              difficulty: wordObj.difficulty || 'medium',
-              direction: 'down',
-              startRow: r,
-              startCol: c,
-              length: wordLength
-            });
-            numberedWords.push(wordObj);
-
-            // Tag cells belonging to this down word
-            for (let i = 0; i < wordLength; i++) {
-              cellMatrix[r + i][c].downWordId = wordObj.id;
-            }
+      // Tag solution letter cells
+      for (let i = 0; i < wordLength; i++) {
+        const r = w.direction === 'across' ? w.startRow : w.startRow + i;
+        const c = w.direction === 'across' ? w.startCol + i : w.startCol;
+        if (r >= 0 && r < rows && c >= 0 && c < cols) {
+          if (w.direction === 'across') {
+            cellMatrix[r][c].acrossWordId = wordObj.id;
+          } else {
+            cellMatrix[r][c].downWordId = wordObj.id;
           }
         }
       }
-    }
 
-    // Sort clues by clue number ascending
+      // Assign Clue Cell preceding word start
+      const clueRow = w.direction === 'across' ? w.startRow : w.startRow - 1;
+      const clueCol = w.direction === 'across' ? w.startCol - 1 : w.startCol;
+
+      if (clueRow >= 0 && clueRow < rows && clueCol >= 0 && clueCol < cols) {
+        const clueCell = cellMatrix[clueRow][clueCol];
+        clueCell.isClueCell = true;
+        clueCell.isBlack = false;
+
+        clueCell.clues.push({
+          wordId: wordObj.id,
+          number: number,
+          direction: w.direction,
+          arrowSymbol: w.direction === 'across' ? '►' : '▼',
+          clue: w.clue,
+          word: w.normalizedWord || w.word,
+          startRow: w.startRow,
+          startCol: w.startCol
+        });
+      }
+
+      const clueData = {
+        id: wordObj.id,
+        number: number,
+        word: wordObj.normalizedWord || wordObj.word,
+        clue: wordObj.clue,
+        description: wordObj.description || '',
+        category: wordObj.category || 'geral',
+        difficulty: wordObj.difficulty || 'medium',
+        direction: w.direction,
+        startRow: w.startRow,
+        startCol: w.startCol,
+        length: wordLength
+      };
+
+      if (w.direction === 'across') {
+        acrossClues.push(clueData);
+      } else {
+        downClues.push(clueData);
+      }
+    });
+
     acrossClues.sort((a, b) => a.number - b.number);
     downClues.sort((a, b) => a.number - b.number);
 

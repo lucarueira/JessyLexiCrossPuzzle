@@ -7,38 +7,38 @@
 export const JESSY_STATES = {
   feliz: {
     key: 'feliz',
-    candidates: ['img/imgfeliz.jpg.png', 'img/feliz.jpg.png', 'img/feliz.jpg', 'img/feliz.png'],
-    img: 'img/imgfeliz.jpg.png',
+    candidates: ['img/imgfeliz_transparent.png', 'img/imgfeliz.jpg.png', 'img/feliz.jpg', 'img/feliz.png'],
+    img: 'img/imgfeliz_transparent.png',
     defaultMsg: 'Olá! Pronto para resolver algumas palavras?'
   },
   esperando: {
     key: 'esperando',
-    candidates: ['img/esperando.jpg', 'img/esperando.jpg.png', 'img/esperando.png'],
-    img: 'img/esperando.jpg',
+    candidates: ['img/esperando_transparent.png', 'img/esperando.jpg', 'img/esperando.png'],
+    img: 'img/esperando_transparent.png',
     defaultMsg: 'Só um momento... estou preparando seu desafio!'
   },
   escrevendo: {
     key: 'escrevendo',
-    candidates: ['img/escrevendo.jpg.png', 'img/escrevendo.jpg', 'img/escrevendo.png'],
-    img: 'img/escrevendo.jpg.png',
+    candidates: ['img/escrevendo_transparent.png', 'img/escrevendo.jpg.png', 'img/escrevendo.jpg'],
+    img: 'img/escrevendo_transparent.png',
     defaultMsg: 'Hmm... vamos descobrir essa palavra!'
   },
   pedindoAjuda: {
     key: 'pedindoAjuda',
-    candidates: ['img/pedindo-ajuda.jpg.png', 'img/pedindo-ajuda.jpg', 'img/pedindo-ajuda.png'],
-    img: 'img/pedindo-ajuda.jpg.png',
+    candidates: ['img/pedindo-ajuda_transparent.png', 'img/pedindo-ajuda.jpg.png', 'img/pedindo-ajuda.jpg'],
+    img: 'img/pedindo-ajuda_transparent.png',
     defaultMsg: 'Precisa de uma ajudinha?'
   },
   ajudaUsada: {
     key: 'ajudaUsada',
-    candidates: ['img/ajuda-usada.jpg.png', 'img/ajuda-usada.jpg', 'img/ajuda-usada.png', 'img/pedindo-ajuda.jpg.png'],
-    img: 'img/pedindo-ajuda.jpg.png',
+    candidates: ['img/pedindo-ajuda_transparent.png', 'img/ajuda-usada.jpg.png', 'img/pedindo-ajuda.jpg'],
+    img: 'img/pedindo-ajuda_transparent.png',
     defaultMsg: 'Pronto! Revelei uma letra para você.'
   },
   comemorando: {
     key: 'comemorando',
-    candidates: ['img/comemorando.jpg.png', 'img/comemorando.jpg', 'img/comemorando.png'],
-    img: 'img/comemorando.jpg.png',
+    candidates: ['img/comemorando_transparent.png', 'img/comemorando.jpg.png', 'img/comemorando.jpg'],
+    img: 'img/comemorando_transparent.png',
     defaultMsg: 'PARABÉNS! Você conseguiu!'
   }
 };

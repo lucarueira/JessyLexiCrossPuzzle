@@ -28,7 +28,7 @@
   <!-- App Header -->
   <header class="app-header">
     <a href="#" class="brand-logo" id="logo-btn">
-      <img src="img/logo.png" alt="Logo Jessy Lexi Cross Puzzle" class="brand-logo-img" id="official-logo-img">
+      <img src="img/logo_transparent.png" alt="Logo Jessy Lexi Cross Puzzle" class="brand-logo-img" id="official-logo-img">
       <div class="logo-text">
         <span class="logo-title">Jessy Lexi</span>
         <span class="logo-subtitle">Cross Puzzle</span>
@@ -48,7 +48,7 @@
     <!-- HUB / MAIN HOME VIEW -->
     <section id="view-hub" class="hub-container">
       <div class="hero-banner">
-        <img src="img/logo.png" alt="Jessy Lexi Cross Puzzle" class="hero-logo-img">
+        <img src="img/logo_transparent.png" alt="Jessy Lexi Cross Puzzle" class="hero-logo-img">
         <h1 class="hero-title">JESSY LEXI</h1>
         <p class="hero-subtitle">Desafie sua mente no portal moderno e inteligente de jogos de palavras.</p>
       </div>
@@ -97,7 +97,7 @@
             <span class="jessy-status-badge">✦ ASSISTENTE VIRTUAL</span>
           </div>
           <div class="jessy-avatar-container">
-            <img src="img/feliz.jpg" alt="Jessy" class="jessy-avatar-img" id="jessy-hub-img">
+            <img src="img/imgfeliz_transparent.png" alt="Jessy" class="jessy-avatar-img" id="jessy-hub-img">
           </div>
           <div class="jessy-speech-box">
             <p class="jessy-speech-text" id="jessy-hub-text">"Olá! Pronto para resolver algumas palavras?"</p>
@@ -137,28 +137,29 @@
 
       <!-- Crossword Play Layout -->
       <div class="crossword-play-layout">
-        <!-- Across Clues List -->
-        <aside class="clues-column">
-          <h3 class="clues-title">➡️ Horizontais</h3>
-          <div class="clues-scroll-list" id="list-across-clues">
-            <!-- Across clue items rendered via JS -->
+        <!-- Main Game Container (Matrix Grid + Tile Rack) -->
+        <div class="play-main-area">
+          <div class="grid-viewport" id="grid-viewport">
+            <div class="crossword-matrix" id="crossword-grid">
+              <!-- Grid cells rendered via JS -->
+            </div>
           </div>
-        </aside>
 
-        <!-- Center Crossword Matrix Grid -->
-        <div class="grid-viewport" id="grid-viewport">
-          <div class="crossword-matrix" id="crossword-grid">
-            <!-- Grid cells rendered via JS -->
+          <!-- Banco de Letras (Tile Rack) -->
+          <div class="tile-rack-section" id="tile-rack-section">
+            <div class="tile-rack-header">
+              <span class="tile-rack-title">🔤 BANCO DE LETRAS</span>
+              <div class="tile-rack-actions">
+                <button class="rack-btn" id="btn-rack-shuffle" title="Embaralhar">🔀 Embaralhar</button>
+                <button class="rack-btn" id="btn-rack-recall" title="Recolher Peças">↩️ Recolher</button>
+                <button class="rack-btn rack-btn-primary" id="btn-rack-submit" title="Enviar Palavra">🚀 Validar</button>
+              </div>
+            </div>
+            <div class="tile-rack-tiles" id="tile-rack-tiles">
+              <!-- Tile buttons rendered dynamically via JS -->
+            </div>
           </div>
         </div>
-
-        <!-- Down Clues List -->
-        <aside class="clues-column">
-          <h3 class="clues-title">⬇️ Verticais</h3>
-          <div class="clues-scroll-list" id="list-down-clues">
-            <!-- Down clue items rendered via JS -->
-          </div>
-        </aside>
 
         <!-- Jessy Interactive Assistant Card -->
         <aside class="jessy-card jessy-game-card">
@@ -166,7 +167,7 @@
             <span class="jessy-status-badge">✦ ASSISTENTE JESSY</span>
           </div>
           <div class="jessy-avatar-container">
-            <img src="img/escrevendo.jpg" alt="Jessy" class="jessy-avatar-img" id="jessy-game-img">
+            <img src="img/escrevendo_transparent.png" alt="Jessy" class="jessy-avatar-img" id="jessy-game-img">
           </div>
           <div class="jessy-speech-box">
             <p class="jessy-speech-text" id="jessy-game-text">"Hmm... vamos descobrir essa palavra!"</p>
@@ -176,43 +177,6 @@
     </section>
 
   </main>
-
-  <!-- Mobile Onscreen Virtual Keyboard -->
-  <div class="virtual-keyboard" id="virtual-keyboard">
-    <div class="keyboard-row">
-      <button class="key-btn" data-key="Q">Q</button>
-      <button class="key-btn" data-key="W">W</button>
-      <button class="key-btn" data-key="E">E</button>
-      <button class="key-btn" data-key="R">R</button>
-      <button class="key-btn" data-key="T">T</button>
-      <button class="key-btn" data-key="Y">Y</button>
-      <button class="key-btn" data-key="U">U</button>
-      <button class="key-btn" data-key="I">I</button>
-      <button class="key-btn" data-key="O">O</button>
-      <button class="key-btn" data-key="P">P</button>
-    </div>
-    <div class="keyboard-row">
-      <button class="key-btn" data-key="A">A</button>
-      <button class="key-btn" data-key="S">S</button>
-      <button class="key-btn" data-key="D">D</button>
-      <button class="key-btn" data-key="F">F</button>
-      <button class="key-btn" data-key="G">G</button>
-      <button class="key-btn" data-key="H">H</button>
-      <button class="key-btn" data-key="J">J</button>
-      <button class="key-btn" data-key="K">K</button>
-      <button class="key-btn" data-key="L">L</button>
-    </div>
-    <div class="keyboard-row">
-      <button class="key-btn" data-key="Z">Z</button>
-      <button class="key-btn" data-key="X">X</button>
-      <button class="key-btn" data-key="C">C</button>
-      <button class="key-btn" data-key="V">V</button>
-      <button class="key-btn" data-key="B">B</button>
-      <button class="key-btn" data-key="N">N</button>
-      <button class="key-btn" data-key="M">M</button>
-      <button class="key-btn key-btn-wide" data-key="BACKSPACE">⌫ Apagar</button>
-    </div>
-  </div>
 
   <!-- MODAL: SETUP NEW GAME -->
   <div class="modal-overlay" id="modal-setup">
@@ -241,6 +205,14 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label class="form-label">🎮 Modo de Entrada / Digitação</label>
+        <div class="select-options-grid" id="opt-input-mode">
+          <div class="option-chip selected" data-value="keyboard">⌨️ Digitação (Teclado)</div>
+          <div class="option-chip" data-value="rack">🔤 Desafio Banco de Letras</div>
+        </div>
+      </div>
+
       <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
         <button class="btn-secondary" id="btn-cancel-setup">Cancelar</button>
         <button class="btn-primary" id="btn-start-new-game">Iniciar Partida</button>
@@ -266,7 +238,7 @@
   <div class="modal-overlay" id="modal-victory">
     <div class="modal-card modal-victory-card" style="text-align: center;">
       <div class="jessy-victory-avatar">
-        <img src="img/comemorando.jpg" alt="Jessy Comemorando" class="jessy-avatar-img" id="jessy-vic-img">
+        <img src="img/comemorando_transparent.png" alt="Jessy Comemorando" class="jessy-avatar-img" id="jessy-vic-img">
       </div>
       <h2 class="modal-title" style="justify-content: center; color: var(--accent-success); margin-bottom: 0.25rem;">
         PARABÉNS!</h2>
@@ -360,6 +332,43 @@
           style="color: var(--accent-error); border-color: rgba(239, 68, 68, 0.3); width: 100%; justify-content: center;">🗑️
           Limpar Progresso e Histórico</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Mobile Onscreen Virtual Keyboard -->
+  <div class="virtual-keyboard" id="virtual-keyboard">
+    <div class="keyboard-row">
+      <button class="key-btn" data-key="Q">Q</button>
+      <button class="key-btn" data-key="W">W</button>
+      <button class="key-btn" data-key="E">E</button>
+      <button class="key-btn" data-key="R">R</button>
+      <button class="key-btn" data-key="T">T</button>
+      <button class="key-btn" data-key="Y">Y</button>
+      <button class="key-btn" data-key="U">U</button>
+      <button class="key-btn" data-key="I">I</button>
+      <button class="key-btn" data-key="O">O</button>
+      <button class="key-btn" data-key="P">P</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key-btn" data-key="A">A</button>
+      <button class="key-btn" data-key="S">S</button>
+      <button class="key-btn" data-key="D">D</button>
+      <button class="key-btn" data-key="F">F</button>
+      <button class="key-btn" data-key="G">G</button>
+      <button class="key-btn" data-key="H">H</button>
+      <button class="key-btn" data-key="J">J</button>
+      <button class="key-btn" data-key="K">K</button>
+      <button class="key-btn" data-key="L">L</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key-btn" data-key="Z">Z</button>
+      <button class="key-btn" data-key="X">X</button>
+      <button class="key-btn" data-key="C">C</button>
+      <button class="key-btn" data-key="V">V</button>
+      <button class="key-btn" data-key="B">B</button>
+      <button class="key-btn" data-key="N">N</button>
+      <button class="key-btn" data-key="M">M</button>
+      <button class="key-btn key-btn-wide" data-key="BACKSPACE">⌫ Apagar</button>
     </div>
   </div>
 

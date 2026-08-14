@@ -22,19 +22,19 @@ export class PlacementValidator {
     const wordLen = word.length;
     const normalizedWord = normalizeString(word);
 
-    // 1. Boundary check
+    // 1. Boundary check (must leave space for clue cell preceding start)
     if (startRow < 0 || startCol < 0) return false;
     if (direction === 'across') {
-      if (startCol + wordLen > gridCols) return false;
+      if (startCol < 1 || startCol + wordLen > gridCols) return false;
     } else {
-      if (startRow + wordLen > gridRows) return false;
+      if (startRow < 1 || startRow + wordLen > gridRows) return false;
     }
 
-    // 2. Cell directly BEFORE word start must be empty
+    // 2. Cell directly BEFORE word start must be empty (will host Clue Cell)
     if (direction === 'across') {
-      if (startCol > 0 && grid[startRow][startCol - 1] !== null) return false;
+      if (grid[startRow][startCol - 1] !== null) return false;
     } else {
-      if (startRow > 0 && grid[startRow - 1][startCol] !== null) return false;
+      if (grid[startRow - 1][startCol] !== null) return false;
     }
 
     // 3. Cell directly AFTER word end must be empty

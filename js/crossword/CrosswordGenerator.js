@@ -31,8 +31,8 @@ export class CrosswordGenerator {
       language = 'pt',
       difficulty = 'random',
       recentWordIds = [],
-      minWords = 8,
-      maxWords = 15
+      minWords = 6,
+      maxWords = 10
     } = options;
 
     // 1. Select candidates

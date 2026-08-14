@@ -1,6 +1,6 @@
 /**
  * JESSY LEXI CROSS PUZZLE - MAIN APP CONTROLLER
- * Initializes components, handles UI routes, grid rendering, and user interactions.
+ * Handles UI routes, Cruzada Direta grid rendering, Input Mode (Keyboard vs Challenge Rack), and game flow.
  */
 
 import { CrosswordGenerator } from './crossword/CrosswordGenerator.js';
@@ -17,7 +17,8 @@ class App {
     this.jessy = new JessyManager();
     this.setupConfig = {
       language: 'pt',
-      difficulty: 'random'
+      difficulty: 'random',
+      inputMode: 'keyboard' // Default is Digitação Livre por Teclado
     };
 
     this.init();
@@ -98,6 +99,7 @@ class App {
     // Option Chips in Setup Modal
     this.bindOptionChips('opt-language', (val) => { this.setupConfig.language = val; });
     this.bindOptionChips('opt-difficulty', (val) => { this.setupConfig.difficulty = val; });
+    this.bindOptionChips('opt-input-mode', (val) => { this.setupConfig.inputMode = val; });
 
     // Option Chips in Settings Modal
     this.bindOptionChips('opt-theme-setting', (val) => {
@@ -156,6 +158,40 @@ class App {
       }
     });
 
+    // Tile Rack Action Buttons
+    document.getElementById('btn-rack-shuffle')?.addEventListener('click', () => {
+      if (this.currentGame) {
+        this.currentGame.shuffleRack();
+      }
+    });
+    document.getElementById('btn-rack-recall')?.addEventListener('click', () => {
+      if (this.currentGame) {
+        this.currentGame.recallPlacedTiles();
+      }
+    });
+    document.getElementById('btn-rack-submit')?.addEventListener('click', () => {
+      if (this.currentGame) {
+        const activeWord = this.currentGame.getActiveWord();
+        if (activeWord) {
+          this.currentGame.verifyWord(activeWord);
+        }
+      }
+    });
+
+    // Virtual Keyboard Buttons Handler
+    document.querySelectorAll('.key-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const key = e.currentTarget.getAttribute('data-key');
+        if (!key || !this.currentGame) return;
+
+        if (key === 'BACKSPACE') {
+          this.currentGame.handleBackspace();
+        } else {
+          this.currentGame.inputLetter(key);
+        }
+      });
+    });
+
     // Victory Modal Actions
     document.getElementById('btn-vic-again')?.addEventListener('click', () => {
       this.closeModal('modal-victory');
@@ -174,20 +210,6 @@ class App {
       if (this.currentGame && document.getElementById('view-game').style.display !== 'none') {
         this.renderGame(this.currentGame.getStateSummary());
       }
-    });
-
-    // Virtual Keyboard Buttons Handler
-    document.querySelectorAll('.key-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const key = e.currentTarget.getAttribute('data-key');
-        if (!key || !this.currentGame) return;
-
-        if (key === 'BACKSPACE') {
-          this.currentGame.handleBackspace();
-        } else {
-          this.currentGame.inputLetter(key);
-        }
-      });
     });
   }
 
@@ -222,15 +244,12 @@ class App {
     this.jessy.setState('feliz');
     document.getElementById('view-hub').style.display = 'flex';
     document.getElementById('view-game').style.display = 'none';
-    document.getElementById('virtual-keyboard').classList.remove('active');
+    document.getElementById('virtual-keyboard')?.classList.remove('active');
   }
 
   showGameView() {
     document.getElementById('view-hub').style.display = 'none';
     document.getElementById('view-game').style.display = 'flex';
-    if (window.innerWidth <= 768) {
-      document.getElementById('virtual-keyboard').classList.add('active');
-    }
   }
 
   startNewGame() {
@@ -245,11 +264,13 @@ class App {
           language: this.setupConfig.language,
           difficulty: this.setupConfig.difficulty,
           recentWordIds,
-          minWords: 8,
-          maxWords: 15
+          minWords: 6,
+          maxWords: 10
         });
 
         this.currentGame = new CrosswordGame(puzzle);
+        this.currentGame.inputMode = this.setupConfig.inputMode || 'keyboard';
+
         this.setupGameListeners();
         this.showGameView();
         this.renderGame(this.currentGame.getStateSummary());
@@ -295,7 +316,7 @@ class App {
   }
 
   renderGame(summary) {
-    const { puzzle, userGrid, revealedGrid, completedWords, hintsLeft, score, formattedTime, selectedCell, currentDirection, activeWord } = summary;
+    const { puzzle, userGrid, revealedGrid, completedWords, hintsLeft, score, formattedTime, selectedCell, activeWord, tileRack, inputMode } = summary;
 
     // Stats bar update
     document.getElementById('val-score').innerText = score.toLocaleString();
@@ -315,11 +336,29 @@ class App {
       bannerText.innerText = 'Selecione uma célula da cruzadinha...';
     }
 
-    // Render Matrix Grid DOM
+    // Render Cruzada Direta Matrix Grid
     this.renderGridMatrix(puzzle, userGrid, revealedGrid, completedWords, selectedCell, activeWord);
 
-    // Render Across & Down Clue Lists
-    this.renderClueLists(puzzle, completedWords, activeWord);
+    // Toggle Input Mode UI (Keyboard vs Challenge Tile Rack)
+    const tileRackSec = document.getElementById('tile-rack-section');
+    const virtKeyb = document.getElementById('virtual-keyboard');
+    const gameContainer = document.getElementById('view-game');
+
+    if (inputMode === 'rack') {
+      if (tileRackSec) tileRackSec.style.display = 'flex';
+      if (virtKeyb) virtKeyb.classList.remove('active');
+      if (gameContainer) gameContainer.classList.remove('keyboard-mode-active');
+      this.renderTileRack(tileRack);
+    } else {
+      if (tileRackSec) tileRackSec.style.display = 'none';
+      if (window.innerWidth <= 768) {
+        if (virtKeyb) virtKeyb.classList.add('active');
+        if (gameContainer) gameContainer.classList.add('keyboard-mode-active');
+      } else {
+        if (virtKeyb) virtKeyb.classList.remove('active');
+        if (gameContainer) gameContainer.classList.remove('keyboard-mode-active');
+      }
+    }
   }
 
   renderGridMatrix(puzzle, userGrid, revealedGrid, completedWords, selectedCell, activeWord) {
@@ -327,13 +366,13 @@ class App {
     const viewport = document.getElementById('grid-viewport');
 
     let cellSize = 54;
-    if (viewport && window.innerWidth > 768) {
-      const availHeight = viewport.clientHeight - 40;
-      const availWidth = viewport.clientWidth - 40;
+    if (viewport) {
+      const availHeight = viewport.clientHeight - 20;
+      const availWidth = viewport.clientWidth - 20;
       if (availHeight > 0 && availWidth > 0) {
         const maxH = Math.floor((availHeight - (puzzle.rows * 4)) / puzzle.rows);
         const maxW = Math.floor((availWidth - (puzzle.cols * 4)) / puzzle.cols);
-        cellSize = Math.max(42, Math.min(68, maxH, maxW));
+        cellSize = Math.max(34, Math.min(80, maxH, maxW));
       }
     }
 
@@ -348,12 +387,47 @@ class App {
         const cellData = puzzle.cells[r][c];
         const cellEl = document.createElement('div');
 
-        if (cellData.isBlack) {
+        if (r === 0 && c === 0 && cellData.isBlack) {
+          cellEl.className = 'grid-cell cell-badge-corner';
+          cellEl.innerHTML = `<div class="badge-corner-content"><span>JESSY</span><strong>CROSS</strong></div>`;
+        } else if (cellData.isBlack) {
           cellEl.className = 'grid-cell cell-black';
+        } else if (cellData.isClueCell) {
+          // Render Direta Clue Cell (Célula de Dica Ampliada)
+          cellEl.className = 'grid-cell cell-clue';
+
+          const contentDiv = document.createElement('div');
+          contentDiv.className = 'clue-cell-content';
+
+          cellData.clues.forEach(clueItem => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'clue-cell-item';
+
+            const snippet = document.createElement('span');
+            snippet.className = 'clue-text-snippet';
+            snippet.innerText = clueItem.clue;
+
+            const arrow = document.createElement('span');
+            arrow.className = `clue-arrow-icon ${clueItem.direction === 'down' ? 'clue-arrow-down' : ''}`;
+            arrow.innerText = clueItem.arrowSymbol;
+
+            itemDiv.appendChild(snippet);
+            itemDiv.appendChild(arrow);
+            contentDiv.appendChild(itemDiv);
+          });
+
+          cellEl.appendChild(contentDiv);
+
+          cellEl.addEventListener('click', () => {
+            if (this.currentGame) {
+              this.currentGame.selectCell(r, c);
+            }
+          });
         } else {
+          // Render Solution Letter Cell
           cellEl.className = 'grid-cell';
 
-          // Check if cell is in active word
+          // Highlight cells belonging to active word (Cyan Light background like reference image cells 2, 3, 4)
           if (activeWord) {
             const inActiveAcross = activeWord.direction === 'across' && cellData.acrossWordId === activeWord.id;
             const inActiveDown = activeWord.direction === 'down' && cellData.downWordId === activeWord.id;
@@ -362,32 +436,21 @@ class App {
             }
           }
 
-          // Check if cell is currently selected
+          // Highlight current selected focus cell (Yellow Gold background like reference image cell 1)
           if (selectedCell && selectedCell.row === r && selectedCell.col === c) {
             cellEl.classList.add('cell-selected');
           }
 
-          // Check if hint revealed
           if (revealedGrid[r][c]) {
             cellEl.classList.add('cell-hint-revealed');
           }
 
-          // Check if word completed
           const acrossDone = cellData.acrossWordId && completedSet.has(cellData.acrossWordId);
           const downDone = cellData.downWordId && completedSet.has(cellData.downWordId);
           if (acrossDone || downDone) {
             cellEl.classList.add('cell-completed');
           }
 
-          // Number badge
-          if (cellData.number) {
-            const numEl = document.createElement('span');
-            numEl.className = 'cell-number';
-            numEl.innerText = cellData.number;
-            cellEl.appendChild(numEl);
-          }
-
-          // User typed or revealed letter
           const letterVal = userGrid[r][c] || '';
           if (letterVal) {
             const letterEl = document.createElement('span');
@@ -396,7 +459,6 @@ class App {
             cellEl.appendChild(letterEl);
           }
 
-          // Click handler
           cellEl.addEventListener('click', () => {
             if (this.currentGame) {
               this.currentGame.selectCell(r, c);
@@ -409,63 +471,25 @@ class App {
     }
   }
 
-  renderClueLists(puzzle, completedWords, activeWord) {
-    const acrossContainer = document.getElementById('list-across-clues');
-    const downContainer = document.getElementById('list-down-clues');
+  renderTileRack(tileRack) {
+    const container = document.getElementById('tile-rack-tiles');
+    if (!container) return;
+    container.innerHTML = '';
 
-    acrossContainer.innerHTML = '';
-    downContainer.innerHTML = '';
+    if (!tileRack || tileRack.length === 0) return;
 
-    const completedSet = new Set(completedWords);
+    tileRack.forEach((tile, index) => {
+      const tileEl = document.createElement('div');
+      tileEl.className = `letter-tile ${tile.isUsed ? 'tile-used' : ''}`;
+      tileEl.innerText = tile.letter;
 
-    // Across Clues
-    puzzle.acrossClues.forEach(clue => {
-      const item = document.createElement('div');
-      item.className = 'clue-item';
-      if (completedSet.has(clue.id)) item.classList.add('completed');
-      if (activeWord && activeWord.id === clue.id && activeWord.direction === 'across') {
-        item.classList.add('active');
-        setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-      }
-
-      item.innerHTML = `
-        <span class="clue-item-num">${clue.number}.</span>
-        <span>${clue.clue}</span>
-      `;
-
-      item.addEventListener('click', () => {
+      tileEl.addEventListener('click', () => {
         if (this.currentGame) {
-          this.currentGame.currentDirection = 'across';
-          this.currentGame.selectCell(clue.startRow, clue.startCol);
+          this.currentGame.selectRackTile(index);
         }
       });
 
-      acrossContainer.appendChild(item);
-    });
-
-    // Down Clues
-    puzzle.downClues.forEach(clue => {
-      const item = document.createElement('div');
-      item.className = 'clue-item';
-      if (completedSet.has(clue.id)) item.classList.add('completed');
-      if (activeWord && activeWord.id === clue.id && activeWord.direction === 'down') {
-        item.classList.add('active');
-        setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-      }
-
-      item.innerHTML = `
-        <span class="clue-item-num">${clue.number}.</span>
-        <span>${clue.clue}</span>
-      `;
-
-      item.addEventListener('click', () => {
-        if (this.currentGame) {
-          this.currentGame.currentDirection = 'down';
-          this.currentGame.selectCell(clue.startRow, clue.startCol);
-        }
-      });
-
-      downContainer.appendChild(item);
+      container.appendChild(tileEl);
     });
   }
 
