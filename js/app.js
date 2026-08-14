@@ -367,12 +367,18 @@ class App {
 
     let cellSize = 54;
     if (viewport) {
-      const availHeight = viewport.clientHeight - 20;
-      const availWidth = viewport.clientWidth - 20;
+      const isMobile = window.innerWidth <= 768;
+      const virtKeyb = document.getElementById('virtual-keyboard');
+      const isKeyboardVisible = isMobile && virtKeyb && virtKeyb.classList.contains('active');
+      const keybOffset = isKeyboardVisible ? 150 : 0;
+
+      const availHeight = viewport.clientHeight - keybOffset - (isMobile ? 10 : 20);
+      const availWidth = viewport.clientWidth - (isMobile ? 10 : 20);
+
       if (availHeight > 0 && availWidth > 0) {
-        const maxH = Math.floor((availHeight - (puzzle.rows * 4)) / puzzle.rows);
-        const maxW = Math.floor((availWidth - (puzzle.cols * 4)) / puzzle.cols);
-        cellSize = Math.max(34, Math.min(80, maxH, maxW));
+        const maxH = Math.floor((availHeight - (puzzle.rows * 3)) / puzzle.rows);
+        const maxW = Math.floor((availWidth - (puzzle.cols * 3)) / puzzle.cols);
+        cellSize = Math.max(26, Math.min(80, maxH, maxW));
       }
     }
 
